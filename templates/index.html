@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Chat Room</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.1.2/socket.io.min.js"></script>
+</head>
+<body>
+<script type="text/javascript">
+    $(document).ready(function(){
+        console.log('연결주소1:'+document.domain + ':' + location.port);
+        var socket = io.connect('http://' + document.domain + ':' + location.port + '/' + 'MyServer');
+        socket.on('connect', function(){        //접속되었을때 자동으로 호출 되기도 하고 서버에서 emit으로 cionnect 했을 때도 호출된다
+            console.log("connected and start authorization");
+            //여기서 지연시간을 발생한다. (코딩필요)
+            socket.emit('authorize', {'access_token': 'abcd1234'});  //store에서 jwt 가져온다.
+            {#var connect_string = 'Hello! I am a new client!!';#}
+            {#socket.send(connect_string);#}
+         });
+        socket.on('message', function(msg){
+            console.log(typeof(msg));
+            if(msg.type === 'normal'){
+                $('#messages').append('>> '+msg.message+'<br>');
+            }else{
+            $('#messages').append('<li>' + msg.message + '</li>');
+            }
+            console.log('Received Message : '+msg.type);
+        });
+        socket.on('authorize', function(data){
+            console.log(data);       //object로 찍힌다.
+            if(data.result_info.code == 1000){       //정상이면
+                $('#messages').append('>> '+ data.result_data.USER_ID+'<br>');
+            }else{                              //정상이 아니면
+            $('#messages').append('<li>' + data.result_info.msg + '</li>');
+            }
+
+        });
+        $('#sendbutton').on('click', function(){
+            socket.send($('#myMessage').val());     //emit message와 같다.
+            $('#myMessage').val('');
+        });
+    });
+
+</script>
+<ul id="messages"></ul>
+<input type="text" id="myMessage">
+<button id="sendbutton">Send</button>
+</body>
+</html>
